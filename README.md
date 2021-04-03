@@ -5,3 +5,5 @@ Network Architecture
 * Grayscale image denoising
 
   <img src="figure/architecture.png" width="200px"/> 
+
+Update not completed
