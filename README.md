@@ -1,9 +1,7 @@
 # ColorRL
 Interesting image colorization agent
-Network Architecture 
-----------
-* Grayscale image denoising
 
-  <img src="figure/architecture.png" width="200px"/> 
+If you are interested in this project, you can contact me via email to work together on this project.
+email: jusadw@163.com
 
 Update not completed
