@@ -1,4 +1,4 @@
-# ColorRL
+# ColorfulRL
 Interesting image colorization agent
 
 
