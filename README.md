@@ -15,7 +15,9 @@ Interesting image colorization agent
   <img src="res_img/img1.png" width="200px"/> 
   <img src="res_img/img2.png" width="200px"/> 
   <img src="res_img/img3.png" width="200px"/> 
+  
 * Color Mask
+
   <img src="res_img/m1.png" width="200px"/> 
   <img src="res_img/m2.png" width="200px"/>
   <img src="res_img/m3.png" width="200px"/>
