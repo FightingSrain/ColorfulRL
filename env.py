@@ -87,9 +87,9 @@ class Env():
         self.image[:, 1, :, :] = np.clip(self.image[:, 1, :, :], a_min=-1, a_max=1)
         self.image[:, 2, :, :] = np.clip(self.image[:, 2, :, :], a_min=-1, a_max=1)
 
-        reward = np.sqrt(np.sum(np.square((self.ori_image - self.previous_image)), axis=1)[:, np.newaxis, :, :]) \
-                 - np.sqrt(np.sum(np.square((self.ori_image - self.image)), axis=1)[:, np.newaxis, :, :])
-
+        reward = (np.sum(np.square((self.ori_image - self.previous_image)), axis=1)[:, np.newaxis, :, :]) \
+                 - (np.sum(np.square((self.ori_image - self.image)), axis=1)[:, np.newaxis, :, :])
+        reward *= 255.
         # l_t = torch.Tensor(self.ori_image)
         # s_d_t = torch.Tensor(self.previous_image)
         # s_d_next = torch.Tensor(self.image)
