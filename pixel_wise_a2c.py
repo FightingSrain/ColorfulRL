@@ -161,7 +161,7 @@ class PixelWiseA2C:
             pi = torch.clamp(pi, min=0)
             n, num_actions, h, w = pi.shape
             pi_reshape = pi.permute(0, 2, 3, 1).contiguous().view(-1, num_actions)
-            m = Categorical(pi_reshape.detach())
+            m = Categorical(pi_reshape)
             actions = m.sample()
 
             log_pi_reshape = torch.log(torch.clamp(pi_reshape, min=1e-9, max=1 - 1e-9))
