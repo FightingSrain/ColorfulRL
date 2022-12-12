@@ -37,7 +37,34 @@ class PixelWiseA2C:
 
         self.t_start = 0
         self.t = 0
+    """
+    异步更新参数
+    """
 
+    def sync_parameters(self, actor, shared_actor):
+        for m1, m2 in zip(actor.modules(), shared_actor.modules()):
+            m1._buffers = m2._buffers.copy()
+        for target_param, param in zip(actor.parameters(), shared_actor.parameters()):
+            target_param.detach().copy_(param.detach())
+
+    """
+    异步更新梯度
+    """
+
+    def update_grad(self, target, source):
+        target_params = dict(target.named_parameters())
+        # print(target_params)
+        for param_name, param in source.named_parameters():
+            if target_params[param_name].grad is None:
+                if param.grad is None:
+                    pass
+                else:
+                    target_params[param_name].grad = param.grad
+            else:
+                if param.grad is None:
+                    target_params[param_name].grad = None
+                else:
+                    target_params[param_name].grad[...] = param.grad
     def cal_gradient_penalty(self, netD, real_data, fake_data, batch_size, config):
         alpha = torch.rand(batch_size, 1)
         alpha = alpha.expand(batch_size, int(real_data.nelement() / batch_size)).contiguous()
@@ -103,7 +130,7 @@ class PixelWiseA2C:
             entropy_hy_loss -= entropy_hy
             entropy_loss -= entropy
 
-            v_loss += (v - R) ** 2
+            v_loss += (v - R) ** 2 / 2.
 
         v_loss *= 0.5
 
@@ -202,40 +229,4 @@ class PixelWiseA2C:
         self.reset()
         return losspi, lossv
 
-    def test(self, model, env, a2c, config):
-        model.eval()
-        test_file = h5py.File("./BSD_val.h5", "r")
-        # step_test = State((self.test_batch, self.ganUseChannel, self.test_size, self.test_size), move_range=3)
-        label = np.asarray(test_file["label"])  # (192, 63, 63, 3)
-        label = label.transpose(0, 3, 1, 2)
-        test_file.close()
-
-        lt = label[0: 16, ...]
-        ll = np.zeros((16, 1, 60, 60))
-        for i in range(16):
-            ll[i] = np.expand_dims(cv2.cvtColor(lt[i].transpose(1, 2, 0), cv2.COLOR_RGB2GRAY), 0)
-        lt = ll
-        raw_n = np.random.normal(0, 25, lt.shape).astype(np.float32) / 255
-        s = np.asarray(np.clip(lt + raw_n, a_max=1., a_min=0.), np.float32)
-
-        # ht = np.zeros([self.test_batch, 64, self.test_size, self.test_size], dtype=np.float32)
-        # st = np.concatenate([s, ht], axis=1)
-        test_reward = 0
-        env.reset(ori_image=lt, image=s)
-        image = s
-        reward = np.zeros((1))
-        flag_a2c = True
-        for t in range(config.episode_len):
-            image_input = Variable(torch.from_numpy(image).type(torch.FloatTensor).cuda())
-            # reward_input = Variable(torch.from_numpy(reward).type(torch.FloatTensor).cuda())
-            with torch.no_grad():
-                pi_out, act_mean, act_logstd = model(image_input, flag_a2c, add_noise=flag_a2c)
-
-            actions, act_prob = self.test_act_and_train(pi_out)
-
-            action_std = torch.exp(act_logstd)
-            p = (torch.normal(act_mean, action_std)).tanh().detach().cpu().numpy()
-            image, reward = env.step(actions.squeeze(), p)
-            test_reward += reward.mean() * np.power(self.gamma, t)
-        model.train()
-        return test_reward
+    
