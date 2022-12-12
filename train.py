@@ -36,7 +36,8 @@ def train():
     env = Env(config)
     a2c = PixelWiseA2C(config)
     model = init_net(ModUnet(config).to(device), 'kaiming', gpu_ids=[])
-
+    shared_model = model
+    model = copy.deepcopy(shared_model)
     # actor.load_state_dict(torch.load("./model_test1/modela9600_.pth"))
     # actor_target.load_state_dict(torch.load("./model_test1/modela100_.pth"))
     # critic.load_state_dict(torch.load('./model_test2/modelc8000_.pth'))
@@ -83,9 +84,10 @@ def train():
         loss1, loss2 = a2c.stop_episode_and_compute_loss(reward=Variable(torch.from_numpy(reward).cuda()), done=True)
         print("epoisode: ", episodes)
         optimizer.zero_grad()
-        ((loss1 + loss2) / config.episode_len).backward()
+        (loss1 + loss2).backward()
         optimizer.step()
-
+        a2c.update_grad(shared_model, model)
+        a2c.sync_parameters(model, shared_model)
         episodes += 1
 
         # save model
